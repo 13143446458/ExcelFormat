@@ -5,7 +5,12 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -94,6 +99,7 @@ public class ChangeExcelService {
 		  
 		   //错误信息接收器
 		   String errorMsg = "";
+		   int sheetNum = wb.getNumberOfSheets();//sheet页的数量
 	       //得到第一个shell  
 	       Sheet sheet=wb.getSheetAt(0);
 	       //得到Excel的行数
@@ -101,39 +107,76 @@ public class ChangeExcelService {
 	       //总列数
 		   int totalCells = 0; 
 	       //得到Excel的列数(前提是有行数)，从第二行算起
-	       if(totalRows>=2 && sheet.getRow(1) != null){
+	       if(totalRows>7 && sheet.getRow(7) != null){
 	            totalCells=sheet.getRow(1).getPhysicalNumberOfCells();
 	       }
 	       
 	       String br = "<br/>";
-	       
+	       String deptName = null;
+	       List<String> progectNameList = new ArrayList<String>();
+	       List<Map<String,Object>> dataList = new ArrayList<Map<String,Object>>();
 	       //循环Excel行数,从第二行开始。标题不入库
-	       for(int r=1;r<totalRows;r++){
+	       for(int r=3;r<totalRows;r++){
 	    	   String rowMessage = "";
 	           Row row = sheet.getRow(r);
 	           if (row == null){
 	        	   errorMsg += br+"第"+(r+1)+"行数据有问题，请仔细检查！";
 	        	   continue;
 	           }
-	           
-	           
-	           //循环Excel的列
-	           for(int c = 0; c <totalCells; c++){
-	               Cell cell = row.getCell(c);
-	               if (null != cell){
-	                  
-	               }else{
-	            	   rowMessage += "第"+(c+1)+"列数据有问题，请仔细检查；";
-	               }
+	           /*获取部门中心及项目名称*/
+	           if(r==3){
+	        	   deptName = row.getCell(1).getStringCellValue();
+	        	   /*从第四列开始读取项目名称*/
+	        	   for(int i=4;i<totalCells-1;i++){
+	        		   Cell cell = row.getCell(i);
+	        		   String progectName = cell.getStringCellValue();
+	        		   progectNameList.add(progectName);
+	        	   }
 	           }
-	           //拼接每行的错误提示
-	           if(!StringUtils.isEmpty(rowMessage)){
-	        	   errorMsg += br+"第"+(r+1)+"行，"+rowMessage;
-	           }else{
-	        	   
+	           /*凭证数据部分*/
+	           if(r>7){
+	        	   //循环Excel的列
+		           for(int c = 0; c <totalCells-1; c++){
+		               Cell cell = row.getCell(c);
+		              
+		               if (null != cell){
+		            	   if(c==0){
+		            		   String subjectCode = cell.getStringCellValue();//科目编码
+			               }else if(c==1){
+			            	   String subjectName = cell.getStringCellValue();//科目名称
+			               }
+			               else if(c>2){
+		            		   if(c==2){//本行所有项目合计
+		            			   Map<String,Object> data = new HashMap<String, Object>();
+		            			   //data.put("", value);
+		            		   }else if(c==3){//空列
+		            			   continue;
+		            		   }else{//项目列
+		            			   
+		            		   }
+		            	   }
+		            	  
+		                  
+		               }else{
+		            	   rowMessage += "第"+(c+1)+"列数据有问题，请仔细检查；";
+		               }
+		           }
+		           
+		           //拼接每行的错误提示
+		           if(!StringUtils.isEmpty(rowMessage)){
+		        	   errorMsg += br+"第"+(r+1)+"行，"+rowMessage;
+		           }else{
+		        	   
+		           }
+		           
 	           }
+	        
 	       }
 	       
+	      /* 输出excel格式错误信息*/
+	       if(!StringUtils.isEmpty(errorMsg)){
+	    	   return errorMsg;
+	       }
 	       
 	       //输出excel文件名
 	       	String newFileName ="模板表--凭证.xls";
@@ -303,11 +346,6 @@ public class ChangeExcelService {
 	       //删除上传的临时文件
 	       if(tempFile.exists()){
 	    	   tempFile.delete();
-	       }
-	       
-	       //全部验证通过才导入到数据库
-	       if(StringUtils.isEmpty(errorMsg)){
-	    	  
 	       }
 	       return errorMsg;
 	  }
