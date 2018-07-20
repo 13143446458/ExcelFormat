@@ -18,16 +18,23 @@
     
     <span>选择区域：</span>
     <select>
-    	<option>深圳</option>
-    	<option>北京</option>
+    	<option value="120102">深圳</option>
+    	<option value="140101">北京</option>
     </select>
     <br/>
     <div>
 	<span style="color:red">第2步：输入系统字段的起始值：</span>
 	</div>
+	 <fieldset>
+    <legend>固定值</legend>
+             单据头(日期): <input type="text" name="Fdate" />
+             单据头(序号): <input type="text" name="FBillHeadNo" />
+             单据体(摘要)：<input type="text" name="FEXPLANATION" value="项目支出调整">
+  </fieldset>
+	<!-- 固定值输入部分 -->
     <fieldset>
     <legend>起始值</legend>
-    (单据体)部门#编码: <input type="text" name="beginId" value="">
+             单据头(凭证号): <input type="text" name="FVOUCHERGROUPNO" />
              单据体(序号): <input type="text" name="FEntity" />
   </fieldset>
   	<div>
