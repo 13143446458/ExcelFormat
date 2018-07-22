@@ -27,45 +27,99 @@ import cn.richinfo.excelformat.util.ExcelImportUtils;
 public class HomeControllor {
 	@Autowired
 	private ChangeExcelService changeExcelService;
+	/**
+	 * 首页页面跳转
+	 * @param model
+	 * @return
+	 */
+	@RequestMapping(value = "/home", method = RequestMethod.GET)
+	public String tohomepage(ModelMap model) {
+		model.addAttribute("message", "");
+		return "home";
+	}
 	
-	 @RequestMapping(value = "/home", method = RequestMethod.GET)
-	   public String tohomepage(ModelMap model) {
-	      model.addAttribute("message", "");
-	      return "home";
-	   }
-	 
-	 @RequestMapping(value = "/importExcel", method = RequestMethod.POST)
-	    public String importExcel(@RequestParam(value="filename") MultipartFile file,
-	                              HttpServletRequest request,HttpServletResponse response,ModelMap model
-	                              ) throws IOException {
+	/**
+	 * 导入数据汇总表进行转换格式
+	 * @param file
+	 * @param request
+	 * @param response
+	 * @param model
+	 * @return
+	 * @throws IOException
+	 */
+	@RequestMapping(value = "/importExcel", method = RequestMethod.POST)
+	public String importExcel(
+			@RequestParam(value = "filename") MultipartFile file,
+			HttpServletRequest request, HttpServletResponse response,
+			ModelMap model) throws IOException {
 
-	        //判断文件是否为空
-	        if(file==null){
-	        	model.addAttribute("message","文件不能为空！");
-	            return "home";
-	        }
+		// 判断文件是否为空
+		if (file == null) {
+			model.addAttribute("message", "文件不能为空！");
+			return "home";
+		}
 
-	        //获取文件名
-	        String fileName=file.getOriginalFilename();
-	        String beginId = request.getParameter("beginId");
-	        //验证文件名是否合格
-	        if(!ExcelImportUtils.validateExcel(fileName)){
-	        	model.addAttribute("message","文件必须是excel格式！");
-	            return "home";
-	        }
+		// 获取文件名
+		String fileName = file.getOriginalFilename();
+		String beginId = request.getParameter("beginId");
+		// 验证文件名是否合格
+		if (!ExcelImportUtils.validateExcel(fileName)) {
+			model.addAttribute("message", "文件必须是excel格式！");
+			return "home";
+		}
 
-	        //进一步判断文件内容是否为空（即判断其大小是否为0或其名称是否为null）
-	        long size=file.getSize();
-	        if(StringUtils.isEmpty(fileName) || size==0){
-	        	model.addAttribute("message","文件不能为空！");
-	            return "home";
-	        }
-	        /*读取excel内容做转换*/
-	        String message ="转换成功";
-	        message = changeExcelService.ImportToChange(fileName, file,request,response);
-	        model.addAttribute("message",message);
-	        return "home";
-	    }
-	 
+		// 进一步判断文件内容是否为空（即判断其大小是否为0或其名称是否为null）
+		long size = file.getSize();
+		if (StringUtils.isEmpty(fileName) || size == 0) {
+			model.addAttribute("message", "文件不能为空！");
+			return "home";
+		}
+		/* 读取excel内容做转换 */
+		String message = "转换成功";
+		message = changeExcelService.ImportToChange(fileName, file, request,
+				response);
+		model.addAttribute("message", message);
+		return "home";
+	}
+
+	/**
+	 * 导入部门及项目信息表
+	 * 
+	 * @param file
+	 * @param request
+	 * @param response
+	 * @param model
+	 * @return
+	 * @throws IOException
+	 */
+	@RequestMapping(value = "/importDeptInfo", method = RequestMethod.POST)
+	public String importDeptExcel(
+			@RequestParam(value = "filename") MultipartFile file,
+			HttpServletRequest request, HttpServletResponse response,
+			ModelMap model) throws IOException {
+		// 判断文件是否为空
+		if (file == null) {
+			model.addAttribute("message", "文件不能为空！");
+			return "home";
+		}
+		// 获取文件名
+		String fileName = file.getOriginalFilename();
+		// 验证文件名是否合格
+		if (!ExcelImportUtils.validateExcel(fileName)) {
+			model.addAttribute("message", "文件必须是excel格式！");
+			return "home";
+		}
+		// 进一步判断文件内容是否为空（即判断其大小是否为0或其名称是否为null）
+		long size = file.getSize();
+		if (StringUtils.isEmpty(fileName) || size == 0) {
+			model.addAttribute("message", "文件不能为空！");
+			return "home";
+		}
+		/* 读取excel内容做转换 */
+		String message = "";
+		message = changeExcelService.ImportDeptAndProjectData(fileName, file, request);
+		model.addAttribute("message", message);
+		return "home";
+	}
 	 
 }
