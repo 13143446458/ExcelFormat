@@ -32,6 +32,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import cn.richinfo.excelformat.util.ExcelImportUtils;
+import cn.richinfo.excelformat.util.PropertyUtil;
 import cn.richinfo.excelformat.util.Tools;
 
 /**
@@ -110,11 +111,24 @@ public class ChangeExcelService {
 		   int totalCells = 0; 
 	       //得到Excel的列数(前提是有行数)，从第二行算起
 	       if(totalRows>7 && sheet.getRow(7) != null){
-	            totalCells=sheet.getRow(1).getPhysicalNumberOfCells();
+	            totalCells=sheet.getRow(7).getPhysicalNumberOfCells();
 	       }
-	       
 	       String br = "<br/>";
-	       String deptName = null;
+	       String FBillHeadNo = request.getParameter("FBillHeadNo");//单据头序号，从页面接收
+	       //账簿名称对应ID的数据
+	       Map<String,String> accountBookIdMaps = new HashMap<String, String>();
+	       accountBookIdMaps.put("深圳国际公益学院", "001");
+	       accountBookIdMaps.put("深圳市亚太国际公益教育基金会", "002");
+	       accountBookIdMaps.put("北京善至教育咨询有限公司", "003");
+	       String deptName = null;//组织名称
+	       String pzzbm = PropertyUtil.getProperty("conf.field.pzzbm", "PRE001");//默认字段：凭证字编码
+	       String pzzmc = PropertyUtil.getProperty("conf.field.pzzmc", "记");//默认字段：凭证字名称
+	       String isWb = PropertyUtil.getProperty("conf.field.wb", "False");//默认字段：外币
+	       String bwbbm = PropertyUtil.getProperty("conf.field.bwbbm", "PRE001");//默认字段：本位币编码
+	       String bwbmc = PropertyUtil.getProperty("conf.field.bwbmc", "人民币");//默认字段：本位币名称
+	       String cashierRecheck = PropertyUtil.getProperty("conf.field.CashierRecheck", "False");//默认字段：出纳复核操作
+	       
+	       
 	       List<String> progectNameList = new ArrayList<String>();
 	       List<Map<String,Object>> dataList = new ArrayList<Map<String,Object>>();
 	       //循环Excel行数,从第二行开始。标题不入库
@@ -129,7 +143,7 @@ public class ChangeExcelService {
 	           if(r==3){
 	        	   deptName = row.getCell(1).getStringCellValue();
 	        	   /*从第四列开始读取项目名称*/
-	        	   for(int i=4;i<totalCells-1;i++){
+	        	   for(int i=4;i<totalCells;i++){
 	        		   Cell cell = row.getCell(i);
 	        		   String progectName = cell.getStringCellValue();
 	        		   progectNameList.add(progectName);
@@ -138,9 +152,12 @@ public class ChangeExcelService {
 	           /*凭证数据部分*/
 	           if(r>7){
 	        	   //循环Excel的列
-		           for(int c = 0; c <totalCells-1; c++){
+		           for(int c = 0; c <totalCells; c++){
 		               Cell cell = row.getCell(c);
-		              
+		               //第三列为空列，跳过
+		               if(c==3){
+		            	   continue;
+		               }
 		               if (null != cell){
 		            	   if(c==0){
 		            		   String subjectCode = cell.getStringCellValue();//科目编码
@@ -148,11 +165,12 @@ public class ChangeExcelService {
 			            	   String subjectName = cell.getStringCellValue();//科目名称
 			               }
 			               else if(c>2){
+			            	   Map<String,Object> data = new HashMap<String, Object>();
 		            		   if(c==2){//本行所有项目合计
-		            			   Map<String,Object> data = new HashMap<String, Object>();
-		            			   //data.put("", value);
-		            		   }else if(c==3){//空列
-		            			   continue;
+		            			   data.put("FBillHead(GL_VOUCHER)", FBillHeadNo);//单据头序号
+		            			   data.put("FAccountBookID", accountBookIdMaps.get(deptName));//账簿编码
+		            			   data.put("FAccountBookID#Name", accountBookIdMaps.get(deptName));//账簿名称
+		            			   
 		            		   }else{//项目列
 		            			   
 		            		   }

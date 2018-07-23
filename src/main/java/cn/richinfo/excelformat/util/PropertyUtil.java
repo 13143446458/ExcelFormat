@@ -3,6 +3,7 @@ package cn.richinfo.excelformat.util;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
@@ -12,7 +13,7 @@ import org.apache.log4j.Logger;
  * Created by hafiz.zhang on 2016/9/15.
  */
 public class PropertyUtil {
-    private static Logger logger = Logger.getLogger(PropertyUtil.class);
+    private static Logger logger = Logger.getLogger(PropertyUtil.class.getClass());
     private static Properties props;
     static{
         loadProps();
@@ -23,8 +24,8 @@ public class PropertyUtil {
         props = new Properties();
         InputStream in = null;
         try {
-            in = PropertyUtil.class.getClassLoader().getResourceAsStream("jdbc.properties");
-            props.load(in);
+            in = PropertyUtil.class.getClassLoader().getResourceAsStream("config.properties");
+            props.load(new InputStreamReader(in, "utf-8"));
         } catch (FileNotFoundException e) {
             logger.error("jdbc.properties文件未找到");
         } catch (IOException e) {
