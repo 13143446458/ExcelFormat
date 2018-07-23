@@ -14,6 +14,7 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFCellStyle;
@@ -71,7 +72,8 @@ public class ChangeExcelService {
 	           }else{
 	        	  wb = new HSSFWorkbook(is); 
 	           }
-	           //根据excel里面的内容读取知识库信息
+	          
+		       //根据excel里面的内容读取信息
 	           return readExcelValue(wb,tempFile,request,response);
 	      }catch(Exception e){
 	          e.printStackTrace();
@@ -329,6 +331,8 @@ public class ChangeExcelService {
 				cell.setCellStyle(style);
 				cell.setCellValue(row2Array[i]);
 			}
+			
+			
 			newFileName = Tools.processFileName(request, newFileName);// 不同浏览器文件名乱码解决
 			try {
 				OutputStream os = response.getOutputStream();// 取得输出流
@@ -349,4 +353,88 @@ public class ChangeExcelService {
 	       }
 	       return errorMsg;
 	  }
+	  
+	  /**
+	   * 导入部门及项目信息表数据
+	   * @param fileName
+	   * @param mfile
+	   * @return
+	   */
+	  public String ImportDeptAndProjectData(String fileName,MultipartFile mfile,HttpServletRequest request){
+		  
+		  File uploadDir = new  File("D:\\fileupload");
+	       //创建一个目录 （它的路径名由当前 File 对象指定，包括任一必须的父路径。）
+	       if (!uploadDir.exists()) uploadDir.mkdirs();
+	       //新建一个文件
+	       File tempFile = new File("D:\\fileupload\\" + new Date().getTime() + ".xls"); 
+	       //初始化输入流
+	       InputStream is = null;  
+	       try{
+	    	   //将上传的文件写入新建的文件中
+	    	   mfile.transferTo(tempFile);
+	    	   //根据新建的文件实例化输入流
+	           is = new FileInputStream(tempFile);
+	    	   
+	    	   //根据版本选择创建Workbook的方式
+	           Workbook wb = null;
+	           //根据文件名判断文件是2003版本还是2007版本
+	           if(ExcelImportUtils.isExcel2007(fileName)){
+	        	  wb = new XSSFWorkbook(is); 
+	           }else{
+	        	  wb = new HSSFWorkbook(is); 
+	           }
+	           //根据excel里面的内容读取知识库信息
+		       //得到第一个shell  
+			   Sheet sheet1=wb.getSheetAt(0);//部门信息sheet
+			   String sheetName = sheet1.getSheetName();
+			   if(!"部门信息".equals(sheetName)){
+				   return "第一个sheet页名称必须为部门信息";
+			   }
+			   int totalRows=sheet1.getPhysicalNumberOfRows();
+			   Map<String,String> deptInfoMap = new HashMap<String, String>();
+			   for(int i=1;i<totalRows;i++){
+				   Row row = sheet1.getRow(i);
+				   String deptNo = row.getCell(0).getStringCellValue();//部门编码	
+				   String deptName = row.getCell(2).getStringCellValue();//部门名称
+				   deptInfoMap.put(deptName, deptNo);//放入到map中
+			   }
+			 //得到第二个shell  
+			   Sheet sheet2=wb.getSheetAt(1);//项目信息sheet
+			   sheetName = sheet2.getSheetName();
+			   if(!"项目信息".equals(sheetName)){
+				   return "第二个sheet页名称必须为项目信息";
+			   }
+			   int totalRows2=sheet2.getPhysicalNumberOfRows();
+			   Map<String,String> projectInfoMap = new HashMap<String, String>();
+			   for(int i=1;i<totalRows2;i++){
+				   Row row = sheet2.getRow(i);
+				   String projectNo = row.getCell(0).getStringCellValue();//项目编码	
+				   String projectName = row.getCell(1).getStringCellValue();//项目名称
+				   projectInfoMap.put(projectName, projectNo);//放入到map中
+			   }
+			   HttpSession session = request.getSession();
+			   session.setAttribute("deptInfoMap", deptInfoMap);
+			   session.setAttribute("projectInfoMap",projectInfoMap);
+	           return "部门信息导入成功";
+	      }catch(Exception e){
+	          e.printStackTrace();
+	      } finally{
+	    	//删除上传的临时文件
+		      if(tempFile.exists()){
+		    	   tempFile.delete();
+		      }
+		       
+	          if(is !=null)
+	          {
+	              try{
+	                  is.close();
+	              }catch(IOException e){
+	                  is = null;    
+	                  e.printStackTrace();  
+	              }
+	          }
+	      }
+       return "导入出错！请检查数据格式！";
+	  }
+			
 }

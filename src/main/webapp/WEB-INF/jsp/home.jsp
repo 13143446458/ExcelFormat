@@ -9,7 +9,7 @@
 <div>
 	<span style="color:red">第1步：导入部门信息及项目信息：</span>
 </div>
-<form id="form1" action="importExcel" enctype="multipart/form-data" method="post">
+<form id="form1" action="importDeptInfo" enctype="multipart/form-data" method="post">
     <input class="form-input" type="file" name="filename"></input>
     <button type="submit" class="btn">导入</button>
 </form>
@@ -43,6 +43,9 @@
     <input class="form-input" type="file" name="filename"></input>
     <button type="submit" class="btn">开始转换</button>
 </form>
-<span>${message}</span>
+<div style="border: 1px solid red;width:300px;height:50px;">
+	<span>系统提示：${message}</span>
+</div>
+
 </body>
 </html>
