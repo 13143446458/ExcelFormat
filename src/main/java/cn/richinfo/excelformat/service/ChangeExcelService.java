@@ -100,6 +100,8 @@ public class ChangeExcelService {
 	   */
 	  private String readExcelValue(Workbook wb,File tempFile,HttpServletRequest request,HttpServletResponse response){
 		  
+		   Map<String,String> deptInfoMap = (Map<String,String>) request.getSession().getAttribute("deptInfoMap");
+		   Map<String,String> projectInfoMap = (Map<String,String>) request.getSession().getAttribute("projectInfoMap");
 		   //错误信息接收器
 		   String errorMsg = "";
 		   int sheetNum = wb.getNumberOfSheets();//sheet页的数量
@@ -115,12 +117,24 @@ public class ChangeExcelService {
 	       }
 	       String br = "<br/>";
 	       String FBillHeadNo = request.getParameter("FBillHeadNo");//单据头序号，从页面接收
+	       String Fdate = request.getParameter("Fdate");//日期
+	       String FVOUCHERGROUPNO = request.getParameter("FVOUCHERGROUPNO");//单据头（凭证号）
+	       String FEntity = request.getParameter("FEntity");
+	       String FEXPLANATION = request.getParameter("FEXPLANATION");//摘要
+	       String organization = request.getParameter("organization");
+	       //组织机构名称对应ID的数据
+	       Map<String,String> organizationMaps = new HashMap<String, String>();
+	       organizationMaps.put("101","深圳国际公益学院");
+	       organizationMaps.put("01","深圳市亚太国际公益教育基金会");
+	       organizationMaps.put("102","北京善至教育咨询有限公司");
 	       //账簿名称对应ID的数据
 	       Map<String,String> accountBookIdMaps = new HashMap<String, String>();
-	       accountBookIdMaps.put("深圳国际公益学院", "001");
-	       accountBookIdMaps.put("深圳市亚太国际公益教育基金会", "002");
-	       accountBookIdMaps.put("北京善至教育咨询有限公司", "003");
+	       accountBookIdMaps.put("101","001");
+	       accountBookIdMaps.put("01","002");
+	       accountBookIdMaps.put("102","003");
+	    
 	       String deptName = null;//组织名称
+	       String deptNo = null;//组织编码
 	       String pzzbm = PropertyUtil.getProperty("conf.field.pzzbm", "PRE001");//默认字段：凭证字编码
 	       String pzzmc = PropertyUtil.getProperty("conf.field.pzzmc", "记");//默认字段：凭证字名称
 	       String isWb = PropertyUtil.getProperty("conf.field.wb", "False");//默认字段：外币
@@ -142,6 +156,7 @@ public class ChangeExcelService {
 	           /*获取部门中心及项目名称*/
 	           if(r==3){
 	        	   deptName = row.getCell(1).getStringCellValue();
+	        	   deptNo = deptInfoMap.get(deptName);
 	        	   /*从第四列开始读取项目名称*/
 	        	   for(int i=4;i<totalCells;i++){
 	        		   Cell cell = row.getCell(i);
@@ -151,6 +166,8 @@ public class ChangeExcelService {
 	           }
 	           /*凭证数据部分*/
 	           if(r>7){
+	        	   String subjectCode = "";
+	        	   String subjectName = "";
 	        	   //循环Excel的列
 		           for(int c = 0; c <totalCells; c++){
 		               Cell cell = row.getCell(c);
@@ -160,23 +177,60 @@ public class ChangeExcelService {
 		               }
 		               if (null != cell){
 		            	   if(c==0){
-		            		   String subjectCode = cell.getStringCellValue();//科目编码
+		            		   subjectCode = cell.getStringCellValue();//科目编码
 			               }else if(c==1){
-			            	   String subjectName = cell.getStringCellValue();//科目名称
+			            	   subjectName = cell.getStringCellValue();//科目名称
 			               }
 			               else if(c>2){
 			            	   Map<String,Object> data = new HashMap<String, Object>();
+			            	   String projectName = "";
+			            	   String projectNo = "";
+			            	   String money = cell.getStringCellValue();//单行合计数值
+			            	   double moneyNum = 0;
 		            		   if(c==2){//本行所有项目合计
-		            			   data.put("FBillHead(GL_VOUCHER)", FBillHeadNo);//单据头序号
-		            			   data.put("FAccountBookID", accountBookIdMaps.get(deptName));//账簿编码
-		            			   data.put("FAccountBookID#Name", accountBookIdMaps.get(deptName));//账簿名称
-		            			   
+		            			   projectName = deptName+"其他";//合计行项目名称
+		            			   moneyNum = Math.abs(Double.parseDouble(money));//取反
 		            		   }else{//项目列
-		            			   
+		            			   projectName = progectNameList.get(c);//通过列索引取得对应项目名
+		            			   moneyNum = Double.parseDouble(money);//不取反
 		            		   }
+		            		   projectNo = projectInfoMap.get(projectName);//获取项目编码
+	            			   /*公共部分*/
+	            			   data.put("FBillHead(GL_VOUCHER)", FBillHeadNo);//单据头序号
+	            			   data.put("FAccountBookID", accountBookIdMaps.get(organization));//账簿编码
+	            			   data.put("FAccountBookID#Name", organizationMaps.get(organization));//账簿名称
+	            			   data.put("Fdate", Fdate);//日期
+	            			   data.put("FVOUCHERGROUPID", pzzbm);//凭证字编码
+	            			   data.put("FVOUCHERGROUPID#Name", pzzmc);//凭证字名称
+	            			   data.put("FVOUCHERGROUPNO", FVOUCHERGROUPNO);//*(单据头)凭证号
+	            			   data.put("FISFOREIGNCUR", isWb);//外币
+	            			   data.put("FBASECURRENCYID", bwbbm);//本位币编码
+	            			   data.put("FBASECURRENCYID#Name", bwbmc);//本位币名称
+	            			   data.put("FCashierRecheck", cashierRecheck);//出纳复核操作
+	            			   data.put("FCreateDate", Fdate);//创建日期
+	            			   data.put("FCancleRecheck", "False");//取消复核操作
+	            			   data.put("FACCBOOKORGID", Fdate);//(单据头)核算组织#编码
+	            			   data.put("FACCBOOKORGID#Name", Fdate);//(单据头)核算组织#名称
+	            			   data.put("FIsQty", "False");//(单据头)数量金额核算
+	            			   data.put("FEntity", FEntity);//单据体序号
+	            			   data.put("FEXPLANATION", FEXPLANATION);//(单据体)摘要
+	            			   data.put("FACCOUNTID", subjectCode);//科目编码
+	            			   data.put("FACCOUNTID#Name", subjectName);//科目名称
+	            			   data.put("FDetailID#FF100002", projectNo);//项目编码
+	            			   data.put("FDetailID#FF100002#Name", projectName);//项目名称
+	            			   data.put("FDetailID#FF100003", subjectName);//区域编码
+	            			   data.put("FDetailID#FF100003", subjectName);//区域名称
+	            			   data.put("FDetailID#FFlex5", deptNo);//部门编码
+	            			   data.put("FDetailID#FFlex5#Name", deptName);//部门名称
+	            			   data.put("FCURRENCYID", "PRE001");//*(单据体)币别#编码
+	            			   data.put("FCURRENCYID#Name", "人民币");//(单据体)币别#名称
+	            			   data.put("FEXCHANGERATETYPE", "HLTX01_SYS");//*(单据体)汇率类型#编码
+	            			   data.put("FEXCHANGERATETYPE#Name", "固定汇率");//(单据体)汇率类型#名称
+	            			   data.put("FEXCHANGERATE", "1");//(单据体)汇率
+	            			   data.put("FAMOUNTFOR", moneyNum);//(单据体)原币金额
+	            			   data.put("FDEBIT", moneyNum);//(单据体)借方金额
+	            			   dataList.add(data);
 		            	   }
-		            	  
-		                  
 		               }else{
 		            	   rowMessage += "第"+(c+1)+"列数据有问题，请仔细检查；";
 		               }
