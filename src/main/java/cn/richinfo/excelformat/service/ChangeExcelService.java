@@ -5,7 +5,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -18,6 +17,7 @@ import javax.servlet.http.HttpSession;
 
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFCellStyle;
+import org.apache.poi.hssf.usermodel.HSSFDataFormat;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -104,24 +104,18 @@ public class ChangeExcelService {
 		   Map<String,String> projectInfoMap = (Map<String,String>) request.getSession().getAttribute("projectInfoMap");
 		   //错误信息接收器
 		   String errorMsg = "";
-		   int sheetNum = wb.getNumberOfSheets();//sheet页的数量
-	       //得到第一个shell  
-	       Sheet sheet=wb.getSheetAt(0);
-	       //得到Excel的行数
-	       int totalRows=sheet.getPhysicalNumberOfRows();
-	       //总列数
-		   int totalCells = 0; 
-	       //得到Excel的列数(前提是有行数)，从第二行算起
-	       if(totalRows>7 && sheet.getRow(7) != null){
-	            totalCells=sheet.getRow(7).getPhysicalNumberOfCells();
-	       }
 	       String br = "<br/>";
+	       String areaId = request.getParameter("areaId");
+	       Map<String,String> areaMaps = new HashMap<String, String>();
+	       areaMaps.put("120102", "深圳");
+	       areaMaps.put("140101", "北京");
 	       String FBillHeadNo = request.getParameter("FBillHeadNo");//单据头序号，从页面接收
 	       String Fdate = request.getParameter("Fdate");//日期
 	       String FVOUCHERGROUPNO = request.getParameter("FVOUCHERGROUPNO");//单据头（凭证号）
 	       String FEntity = request.getParameter("FEntity");
 	       String FEXPLANATION = request.getParameter("FEXPLANATION");//摘要
 	       String organization = request.getParameter("organization");
+	       int entityNum = Integer.parseInt(FEntity);
 	       //组织机构名称对应ID的数据
 	       Map<String,String> organizationMaps = new HashMap<String, String>();
 	       organizationMaps.put("101","深圳国际公益学院");
@@ -141,111 +135,127 @@ public class ChangeExcelService {
 	       String bwbbm = PropertyUtil.getProperty("conf.field.bwbbm", "PRE001");//默认字段：本位币编码
 	       String bwbmc = PropertyUtil.getProperty("conf.field.bwbmc", "人民币");//默认字段：本位币名称
 	       String cashierRecheck = PropertyUtil.getProperty("conf.field.CashierRecheck", "False");//默认字段：出纳复核操作
-	       
-	       
-	       List<String> progectNameList = new ArrayList<String>();
+		   int sheetNum = wb.getNumberOfSheets();//sheet页的数量
+		 
 	       List<Map<String,Object>> dataList = new ArrayList<Map<String,Object>>();
-	       //循环Excel行数,从第二行开始。标题不入库
-	       for(int r=3;r<totalRows;r++){
-	    	   String rowMessage = "";
-	           Row row = sheet.getRow(r);
-	           if (row == null){
-	        	   errorMsg += br+"第"+(r+1)+"行数据有问题，请仔细检查！";
-	        	   continue;
-	           }
-	           /*获取部门中心及项目名称*/
-	           if(r==3){
-	        	   deptName = row.getCell(1).getStringCellValue();
-	        	   deptNo = deptInfoMap.get(deptName);
-	        	   /*从第四列开始读取项目名称*/
-	        	   for(int i=4;i<totalCells;i++){
-	        		   Cell cell = row.getCell(i);
-	        		   String progectName = cell.getStringCellValue();
-	        		   progectNameList.add(progectName);
-	        	   }
-	           }
-	           /*凭证数据部分*/
-	           if(r>7){
-	        	   String subjectCode = "";
-	        	   String subjectName = "";
-	        	   //循环Excel的列
-		           for(int c = 0; c <totalCells; c++){
-		               Cell cell = row.getCell(c);
-		               //第三列为空列，跳过
-		               if(c==3){
-		            	   continue;
-		               }
-		               if (null != cell){
-		            	   if(c==0){
-		            		   subjectCode = cell.getStringCellValue();//科目编码
-			               }else if(c==1){
-			            	   subjectName = cell.getStringCellValue();//科目名称
+		   for(int s=0;s<sheetNum;s++){
+			   List<String> progectNameList = new ArrayList<String>();
+			   //得到第一个shell  
+		       Sheet sheet=wb.getSheetAt(s);
+		     //得到Excel的行数
+		       int totalRows=sheet.getPhysicalNumberOfRows();
+		       //总列数
+			   int totalCells = 0; 
+		       //得到Excel的列数(前提是有行数)，从第二行算起
+		       if(totalRows>7 && sheet.getRow(7) != null){
+		            totalCells=sheet.getRow(7).getPhysicalNumberOfCells();
+		       }
+		       //循环Excel行数,从第二行开始。标题不入库
+		       for(int r=3;r<totalRows-1;r++){
+		    	   String rowMessage = "";
+		           Row row = sheet.getRow(r);
+		           if (row == null){
+		        	   errorMsg += br+"第"+(r+1)+"行数据有问题，请仔细检查！";
+		        	   continue;
+		           }
+		           /*获取部门中心及项目名称*/
+		           if(r==3){
+		        	   deptName = row.getCell(1).getStringCellValue();
+		        	   deptNo = deptInfoMap.get(deptName);
+		        	   /*从第四列开始读取项目名称*/
+		        	   for(int i=4;i<totalCells;i++){
+		        		   Cell cell = row.getCell(i);
+		        		   String progectName = cell.getStringCellValue();
+		        		   progectNameList.add(progectName);
+		        	   }
+		           }
+		           /*凭证数据部分*/
+		           if(r>6){
+		        	   String subjectCode = "";
+		        	   String subjectName = "";
+		        	   //循环Excel的列
+			           for(int c = 0; c <totalCells; c++){
+			               Cell cell = row.getCell(c);
+			               //第三列为空列，跳过
+			               if(c==3){
+			            	   continue;
 			               }
-			               else if(c>2){
-			            	   Map<String,Object> data = new HashMap<String, Object>();
-			            	   String projectName = "";
-			            	   String projectNo = "";
-			            	   String money = cell.getStringCellValue();//单行合计数值
-			            	   double moneyNum = 0;
-		            		   if(c==2){//本行所有项目合计
-		            			   projectName = deptName+"其他";//合计行项目名称
-		            			   moneyNum = Math.abs(Double.parseDouble(money));//取反
-		            		   }else{//项目列
-		            			   projectName = progectNameList.get(c);//通过列索引取得对应项目名
-		            			   moneyNum = Double.parseDouble(money);//不取反
-		            		   }
-		            		   projectNo = projectInfoMap.get(projectName);//获取项目编码
-	            			   /*公共部分*/
-	            			   data.put("FBillHead(GL_VOUCHER)", FBillHeadNo);//单据头序号
-	            			   data.put("FAccountBookID", accountBookIdMaps.get(organization));//账簿编码
-	            			   data.put("FAccountBookID#Name", organizationMaps.get(organization));//账簿名称
-	            			   data.put("Fdate", Fdate);//日期
-	            			   data.put("FVOUCHERGROUPID", pzzbm);//凭证字编码
-	            			   data.put("FVOUCHERGROUPID#Name", pzzmc);//凭证字名称
-	            			   data.put("FVOUCHERGROUPNO", FVOUCHERGROUPNO);//*(单据头)凭证号
-	            			   data.put("FISFOREIGNCUR", isWb);//外币
-	            			   data.put("FBASECURRENCYID", bwbbm);//本位币编码
-	            			   data.put("FBASECURRENCYID#Name", bwbmc);//本位币名称
-	            			   data.put("FCashierRecheck", cashierRecheck);//出纳复核操作
-	            			   data.put("FCreateDate", Fdate);//创建日期
-	            			   data.put("FCancleRecheck", "False");//取消复核操作
-	            			   data.put("FACCBOOKORGID", Fdate);//(单据头)核算组织#编码
-	            			   data.put("FACCBOOKORGID#Name", Fdate);//(单据头)核算组织#名称
-	            			   data.put("FIsQty", "False");//(单据头)数量金额核算
-	            			   data.put("FEntity", FEntity);//单据体序号
-	            			   data.put("FEXPLANATION", FEXPLANATION);//(单据体)摘要
-	            			   data.put("FACCOUNTID", subjectCode);//科目编码
-	            			   data.put("FACCOUNTID#Name", subjectName);//科目名称
-	            			   data.put("FDetailID#FF100002", projectNo);//项目编码
-	            			   data.put("FDetailID#FF100002#Name", projectName);//项目名称
-	            			   data.put("FDetailID#FF100003", subjectName);//区域编码
-	            			   data.put("FDetailID#FF100003", subjectName);//区域名称
-	            			   data.put("FDetailID#FFlex5", deptNo);//部门编码
-	            			   data.put("FDetailID#FFlex5#Name", deptName);//部门名称
-	            			   data.put("FCURRENCYID", "PRE001");//*(单据体)币别#编码
-	            			   data.put("FCURRENCYID#Name", "人民币");//(单据体)币别#名称
-	            			   data.put("FEXCHANGERATETYPE", "HLTX01_SYS");//*(单据体)汇率类型#编码
-	            			   data.put("FEXCHANGERATETYPE#Name", "固定汇率");//(单据体)汇率类型#名称
-	            			   data.put("FEXCHANGERATE", "1");//(单据体)汇率
-	            			   data.put("FAMOUNTFOR", moneyNum);//(单据体)原币金额
-	            			   data.put("FDEBIT", moneyNum);//(单据体)借方金额
-	            			   dataList.add(data);
-		            	   }
-		               }else{
-		            	   rowMessage += "第"+(c+1)+"列数据有问题，请仔细检查；";
-		               }
+			               if (null != cell){
+			            	   if(c==0){
+			            		   subjectCode = cell.getStringCellValue();//科目编码
+				               }else if(c==1){
+				            	   subjectName = cell.getStringCellValue();//科目名称
+				               }
+				               else if(c>=2){
+				            	   Map<String,Object> data = new HashMap<String, Object>();
+				            	   String projectName = "";
+				            	   String projectNo = "";
+				            	   double moneyNum = cell.getNumericCellValue();//单行合计数值
+			            		   if(c==2){//本行所有项目合计
+			            			   if("家族传承中心".equals(deptName)){
+			            				   projectName = "家族慈善传承中心其他";
+			            			   }else{
+			            				   projectName = deptName+"其他";//合计行项目名称
+			            			   }
+			            			   moneyNum = moneyNum*(-1);//取反
+			            		   }else{//项目列
+			            			   projectName = progectNameList.get(c-4);//通过列索引取得对应项目名
+			            		   }
+			            		   projectNo = projectInfoMap.get(projectName);//获取项目编码
+		            			   /*公共部分*/
+		            			   data.put("FBillHead(GL_VOUCHER)", FBillHeadNo);//单据头序号
+		            			   data.put("FAccountBookID", accountBookIdMaps.get(organization));//账簿编码
+		            			   data.put("FAccountBookID#Name", organizationMaps.get(organization));//账簿名称
+		            			   data.put("FDate", Fdate);//日期
+		            			   data.put("FVOUCHERGROUPID", pzzbm);//凭证字编码
+		            			   data.put("FVOUCHERGROUPID#Name", pzzmc);//凭证字名称
+		            			   data.put("FVOUCHERGROUPNO", FVOUCHERGROUPNO);//*(单据头)凭证号
+		            			   data.put("FISFOREIGNCUR", isWb);//外币
+		            			   data.put("FBASECURRENCYID", bwbbm);//本位币编码
+		            			   data.put("FBASECURRENCYID#Name", bwbmc);//本位币名称
+		            			   data.put("FCashierRecheck", cashierRecheck);//出纳复核操作
+		            			   data.put("FCreateDate", Fdate);//创建日期
+		            			   data.put("FCancleRecheck", "False");//取消复核操作
+		            			   data.put("FACCBOOKORGID", organization);//(单据头)核算组织#编码
+		            			   data.put("FACCBOOKORGID#Name", organizationMaps.get(organization));//(单据头)核算组织#名称
+		            			   data.put("FIsQty", "False");//(单据头)数量金额核算
+		            			   data.put("FEntity", entityNum);//单据体序号
+		            			   data.put("FEXPLANATION", FEXPLANATION);//(单据体)摘要
+		            			   data.put("FACCOUNTID", subjectCode);//科目编码
+		            			   data.put("FACCOUNTID#Name", subjectName);//科目名称
+		            			   data.put("FDetailID#FF100002", projectNo);//项目编码
+		            			   data.put("FDetailID#FF100002#Name", projectName);//项目名称
+		            			   data.put("FDetailID#FF100003", areaId);//区域编码
+		            			   data.put("FDetailID#FF100003#Name",areaMaps.get(areaId));//区域名称
+		            			   data.put("FDetailID#FFlex5", deptNo);//部门编码
+		            			   data.put("FDetailID#FFlex5#Name", deptName);//部门名称
+		            			   data.put("FCURRENCYID", "PRE001");//*(单据体)币别#编码
+		            			   data.put("FCURRENCYID#Name", "人民币");//(单据体)币别#名称
+		            			   data.put("FEXCHANGERATETYPE", "HLTX01_SYS");//*(单据体)汇率类型#编码
+		            			   data.put("FEXCHANGERATETYPE#Name", "固定汇率");//(单据体)汇率类型#名称
+		            			   data.put("FEXCHANGERATE", "1");//(单据体)汇率
+		            			   data.put("FAMOUNTFOR", moneyNum);//(单据体)原币金额
+		            			   data.put("FDEBIT", moneyNum);//(单据体)借方金额
+		            			   dataList.add(data);
+		            			   entityNum++;
+			            	   }
+			               }else{
+			            	   rowMessage += "第"+(c+1)+"列数据有问题，请仔细检查；";
+			               }
+			           }
+			           
+			           //拼接每行的错误提示
+			           if(!StringUtils.isEmpty(rowMessage)){
+			        	   errorMsg += br+"第"+(r+1)+"行，"+rowMessage;
+			           }else{
+			        	   
+			           }
+			           
 		           }
-		           
-		           //拼接每行的错误提示
-		           if(!StringUtils.isEmpty(rowMessage)){
-		        	   errorMsg += br+"第"+(r+1)+"行，"+rowMessage;
-		           }else{
-		        	   
-		           }
-		           
-	           }
-	        
-	       }
+		        
+		       }
+		   }
+		   
 	       
 	      /* 输出excel格式错误信息*/
 	       if(!StringUtils.isEmpty(errorMsg)){
@@ -256,6 +266,7 @@ public class ChangeExcelService {
 	       	String newFileName ="模板表--凭证.xls";
 	       	HSSFWorkbook book = new HSSFWorkbook();// 创建Excel文件
 			HSSFSheet newSheet = book.createSheet("凭证#单据头(FBillHead)"); // 创建一个工作薄
+			newSheet.createFreezePane(2, 2, 3, 3); 
 	        //设置样式-颜色
 	    	HSSFCellStyle style = book.createCellStyle();  
 	        style.setFillPattern(HSSFCellStyle.SOLID_FOREGROUND);  
@@ -403,7 +414,34 @@ public class ChangeExcelService {
 				cell.setCellStyle(style);
 				cell.setCellValue(row2Array[i]);
 			}
-			
+			HSSFCellStyle cellStyle1 = book.createCellStyle();
+            cellStyle1.setDataFormat(HSSFDataFormat.getBuiltinFormat("#,##0.00"));
+            HSSFCellStyle cellStyle2 = book.createCellStyle();
+            HSSFDataFormat df = book.createDataFormat();
+            cellStyle2.setDataFormat(df.getFormat("#,##0.0"));
+			for(int i =0;i<dataList.size();i++){
+				Row row = newSheet.createRow(i+2);
+				for(int j=0;j<row1Array.length;j++){
+					Cell cell = row.createCell(j);
+					String cellValue =""+ dataList.get(i).get(row1Array[j]);
+					if("null".equals(cellValue)){
+						cellValue ="";
+					}
+					
+					if("FAMOUNTFOR".equals(row1Array[j])){
+			            cell.setCellStyle(cellStyle1);
+			            cell.setCellValue(Double.parseDouble(cellValue));
+			            
+					}else if("FDEBIT".equals(row1Array[j])){
+			            cell.setCellStyle(cellStyle2);
+			            cell.setCellValue(Double.parseDouble(cellValue));
+					}else{
+						cell.setCellValue(cellValue);
+					}
+					
+				}
+				
+			}
 			
 			newFileName = Tools.processFileName(request, newFileName);// 不同浏览器文件名乱码解决
 			try {

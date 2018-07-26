@@ -17,7 +17,7 @@
 <form id="form2" action="importExcel" enctype="multipart/form-data" method="post">
     
     <span>选择区域：</span>
-    <select>
+    <select name="areaId">
     	<option value="120102">深圳</option>
     	<option value="140101">北京</option>
     </select>
@@ -30,6 +30,13 @@
              单据头(日期): <input type="text" name="Fdate" />
              单据头(序号): <input type="text" name="FBillHeadNo" />
              单据体(摘要)：<input type="text" name="FEXPLANATION" value="项目支出调整">
+    <span>选择机构：</span>
+    <select name="organization">
+    	<option value="101">深圳国际公益学院</option>
+    	<option value="01">深圳市亚太国际公益教育基金会</option>
+    	<option value="102">北京善至教育咨询有限公司</option>
+    </select>         
+             
   </fieldset>
 	<!-- 固定值输入部分 -->
     <fieldset>
