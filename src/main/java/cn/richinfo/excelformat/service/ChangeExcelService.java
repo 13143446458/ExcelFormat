@@ -45,8 +45,9 @@ public class ChangeExcelService {
 	/**
 	 * 上传excel文件到临时目录后并开始解析
 	 * @param fileName
-	 * @param file
-	 * @param userName
+	 * @param mfile
+	 * @param request
+	 * @param response
 	 * @return
 	 */
 	public String ImportToChange(String fileName,MultipartFile mfile,HttpServletRequest request,HttpServletResponse response){
@@ -82,7 +83,7 @@ public class ChangeExcelService {
 	          if(is !=null)
 	          {
 	              try{
-	                  is.close();
+	                  is.close();//关闭流
 	              }catch(IOException e){
 	                  is = null;    
 	                  e.printStackTrace();  
@@ -91,13 +92,16 @@ public class ChangeExcelService {
 	      }
         return "导入出错！请检查数据格式！";
     }
-	
-	
+
+
 	/**
-	   * 解析Excel里面的数据
-	   * @param wb
-	   * @return
-	   */
+	 * 解析Excel里面的数据
+	 * @param wb
+	 * @param tempFile
+	 * @param request
+	 * @param response
+	 * @return
+	 */
 	  private String readExcelValue(Workbook wb,File tempFile,HttpServletRequest request,HttpServletResponse response){
 		  
 		   Map<String,String> deptInfoMap = (Map<String,String>) request.getSession().getAttribute("deptInfoMap");
@@ -463,14 +467,15 @@ public class ChangeExcelService {
 	       }
 	       return errorMsg;
 	  }
-	  
-	  /**
-	   * 导入部门及项目信息表数据
-	   * @param fileName
-	   * @param mfile
-	   * @return
-	   */
-	  public String ImportDeptAndProjectData(String fileName,MultipartFile mfile,HttpServletRequest request){
+
+	/**
+	 * 导入部门及项目信息表数据
+	 * @param fileName
+	 * @param mfile
+	 * @param request
+	 * @return
+	 */
+	public String ImportDeptAndProjectData(String fileName,MultipartFile mfile,HttpServletRequest request){
 		  
 		  File uploadDir = new  File("D:\\fileupload");
 	       //创建一个目录 （它的路径名由当前 File 对象指定，包括任一必须的父路径。）
@@ -530,10 +535,9 @@ public class ChangeExcelService {
 	          e.printStackTrace();
 	      } finally{
 	    	//删除上传的临时文件
-		      if(tempFile.exists()){
-		    	   tempFile.delete();
-		      }
-		       
+		      if(tempFile.exists()) {
+				  tempFile.delete();
+			  }
 	          if(is !=null)
 	          {
 	              try{
