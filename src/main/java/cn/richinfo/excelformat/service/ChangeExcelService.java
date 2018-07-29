@@ -106,6 +106,9 @@ public class ChangeExcelService {
 		  
 		   Map<String,String> deptInfoMap = (Map<String,String>) request.getSession().getAttribute("deptInfoMap");
 		   Map<String,String> projectInfoMap = (Map<String,String>) request.getSession().getAttribute("projectInfoMap");
+		   if(deptInfoMap == null || projectInfoMap==null){
+		   	return "部门信息或者项目信息为空！";
+		   }
 		   //错误信息接收器
 		   String errorMsg = "";
 	       String br = "<br/>";

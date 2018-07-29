@@ -18,11 +18,25 @@
         <property name="suffix" value=".jsp" />
     </bean>
 
-    <mvc:resources mapping="/resources/**" location="/resources/" />
+     <mvc:resources location="/WEB-INF/img/" mapping="/img/**"/>
+     <mvc:resources location="/WEB-INF/js/" mapping="/js/**"/>
+     <mvc:resources location="/WEB-INF/css/" mapping="/css/**"/>
 
-    <mvc:annotation-driven />
-    
-    <!-- 设置上传文件最大值   1M=1*1024*1024(B)=1048576 bytes -->  
+
+    <!-- 处理请求返回json字符串的乱码问题 -->
+    <mvc:annotation-driven>
+        <mvc:message-converters>
+            <bean class="org.springframework.http.converter.StringHttpMessageConverter">
+                <property name="supportedMediaTypes">
+                    <list>
+                        <value>application/json;charset=UTF-8</value>
+                    </list>
+                </property>
+            </bean>
+        </mvc:message-converters>
+    </mvc:annotation-driven>
+
+    <!-- 设置上传文件最大值   1M=1*1024*1024(B)=1048576 bytes -->
     <bean id="multipartResolver"  
   	class="org.springframework.web.multipart.commons.CommonsMultipartResolver">  
     <property name="maxUploadSize" value="10485760"/>
