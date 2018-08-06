@@ -143,11 +143,11 @@ public class ChangeExcelService {
 	       String bwbmc = PropertyUtil.getProperty("conf.field.bwbmc", "人民币");//默认字段：本位币名称
 	       String cashierRecheck = PropertyUtil.getProperty("conf.field.CashierRecheck", "False");//默认字段：出纳复核操作
 		   int sheetNum = wb.getNumberOfSheets();//sheet页的数量
-		 
+		   int FVOUCHERGROUPNOINT = Integer.parseInt(FVOUCHERGROUPNO);
 	       List<Map<String,Object>> dataList = new ArrayList<Map<String,Object>>();
 		   for(int s=0;s<sheetNum;s++){
 			   List<String> progectNameList = new ArrayList<String>();
-			   //得到第一个shell  
+			   //得到第一个shell
 		       Sheet sheet=wb.getSheetAt(s);
 		     //得到Excel的行数
 		       int totalRows=sheet.getPhysicalNumberOfRows();
@@ -216,7 +216,7 @@ public class ChangeExcelService {
 		            			   data.put("FDate", Fdate);//日期
 		            			   data.put("FVOUCHERGROUPID", pzzbm);//凭证字编码
 		            			   data.put("FVOUCHERGROUPID#Name", pzzmc);//凭证字名称
-		            			   data.put("FVOUCHERGROUPNO", FVOUCHERGROUPNO);//*(单据头)凭证号
+		            			   data.put("FVOUCHERGROUPNO", FVOUCHERGROUPNOINT);//*(单据头)凭证号
 		            			   data.put("FISFOREIGNCUR", isWb);//外币
 		            			   data.put("FBASECURRENCYID", bwbbm);//本位币编码
 		            			   data.put("FBASECURRENCYID#Name", bwbmc);//本位币名称
@@ -261,6 +261,8 @@ public class ChangeExcelService {
 		           }
 		        
 		       }
+			   FVOUCHERGROUPNOINT++;
+
 		   }
 		   
 	       
@@ -436,11 +438,11 @@ public class ChangeExcelService {
 					}
 					
 					if("FAMOUNTFOR".equals(row1Array[j])){
-			            cell.setCellStyle(cellStyle1);
+			            //cell.setCellStyle(cellStyle1);
 			            cell.setCellValue(Double.parseDouble(cellValue));
 			            
 					}else if("FDEBIT".equals(row1Array[j])){
-			            cell.setCellStyle(cellStyle2);
+			            //cell.setCellStyle(cellStyle2);
 			            cell.setCellValue(Double.parseDouble(cellValue));
 					}else{
 						cell.setCellValue(cellValue);

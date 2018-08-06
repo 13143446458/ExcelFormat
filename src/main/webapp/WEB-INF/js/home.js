@@ -3,7 +3,7 @@ $(document).ready(function () {
         var formData = new FormData($("#form1")[0]);
         formData.append("file", $("#file")[0].files);
         $.ajax({
-            url: "/importDeptInfo",
+            url: "importDeptInfo",
             type: "POST",
             data: formData,
             processData: false,
