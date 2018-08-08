@@ -15,6 +15,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.apache.log4j.Logger;
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFCellStyle;
 import org.apache.poi.hssf.usermodel.HSSFDataFormat;
@@ -42,6 +43,8 @@ import cn.richinfo.excelformat.util.Tools;
  */
 @Service
 public class ChangeExcelService {
+
+	private static Logger logger = Logger.getLogger(ChangeExcelService.class.getClass());
 	/**
 	 * 上传excel文件到临时目录后并开始解析
 	 * @param fileName
@@ -51,14 +54,15 @@ public class ChangeExcelService {
 	 * @return
 	 */
 	public String ImportToChange(String fileName,MultipartFile mfile,HttpServletRequest request,HttpServletResponse response){
-		
-		   File uploadDir = new  File("D:\\fileupload");
-	       //创建一个目录 （它的路径名由当前 File 对象指定，包括任一必须的父路径。）
-	       if (!uploadDir.exists()) uploadDir.mkdirs();
-	       //新建一个文件
-	       File tempFile = new File("D:\\fileupload\\" + new Date().getTime() + ".xlsx"); 
-	       //初始化输入流
-	       InputStream is = null;  
+			String filePath = request.getRealPath("")+"/fileDir";
+			logger.info("filePath:"+filePath);
+			File uploadDir = new  File(filePath);
+			//创建一个目录 （它的路径名由当前 File 对象指定，包括任一必须的父路径。）
+			if (!uploadDir.exists()) uploadDir.mkdirs();
+			//新建一个文件
+			File tempFile = new File(filePath + new Date().getTime() + ".xlsx");
+			//初始化输入流
+	       InputStream is = null;
 	       try{
 	    	   //将上传的文件写入新建的文件中
 	    	   mfile.transferTo(tempFile);
@@ -117,6 +121,7 @@ public class ChangeExcelService {
 	       areaMaps.put("120102", "深圳");
 	       areaMaps.put("140101", "北京");
 	       String FBillHeadNo = request.getParameter("FBillHeadNo");//单据头序号，从页面接收
+		   int FBillHeadNoINT = Integer.parseInt(FBillHeadNo);
 	       String Fdate = request.getParameter("Fdate");//日期
 	       String FVOUCHERGROUPNO = request.getParameter("FVOUCHERGROUPNO");//单据头（凭证号）
 	       String FEntity = request.getParameter("FEntity");
@@ -158,7 +163,7 @@ public class ChangeExcelService {
 		            totalCells=sheet.getRow(7).getPhysicalNumberOfCells();
 		       }
 		       //循环Excel行数,从第二行开始。标题不入库
-		       for(int r=3;r<totalRows-1;r++){
+		       for(int r=3;r<totalRows;r++){
 		    	   String rowMessage = "";
 		           Row row = sheet.getRow(r);
 		           if (row == null){
@@ -190,6 +195,9 @@ public class ChangeExcelService {
 			               if (null != cell){
 			            	   if(c==0){
 			            		   subjectCode = cell.getStringCellValue();//科目编码
+								   if("总计".equals(subjectCode)){
+								   		break;//中断内层循环
+								   }
 				               }else if(c==1){
 				            	   subjectName = cell.getStringCellValue();//科目名称
 				               }
@@ -208,9 +216,13 @@ public class ChangeExcelService {
 			            		   }else{//项目列
 			            			   projectName = progectNameList.get(c-4);//通过列索引取得对应项目名
 			            		   }
+			            		   //金额为0不生成凭证
+			            		   if(moneyNum == 0){
+			            		       continue;
+                                   }
 			            		   projectNo = projectInfoMap.get(projectName);//获取项目编码
 		            			   /*公共部分*/
-		            			   data.put("FBillHead(GL_VOUCHER)", FBillHeadNo);//单据头序号
+		            			   data.put("FBillHead(GL_VOUCHER)", FBillHeadNoINT);//单据头序号
 		            			   data.put("FAccountBookID", accountBookIdMaps.get(organization));//账簿编码
 		            			   data.put("FAccountBookID#Name", organizationMaps.get(organization));//账簿名称
 		            			   data.put("FDate", Fdate);//日期
@@ -262,7 +274,7 @@ public class ChangeExcelService {
 		        
 		       }
 			   FVOUCHERGROUPNOINT++;
-
+			   FBillHeadNoINT++;
 		   }
 		   
 	       
@@ -481,12 +493,14 @@ public class ChangeExcelService {
 	 * @return
 	 */
 	public String ImportDeptAndProjectData(String fileName,MultipartFile mfile,HttpServletRequest request){
-		  
-		  File uploadDir = new  File("D:\\fileupload");
+
+		  String filePath = request.getRealPath("")+"/fileDir";
+		  logger.info("filePath:"+filePath);
+		  File uploadDir = new  File(filePath);
 	       //创建一个目录 （它的路径名由当前 File 对象指定，包括任一必须的父路径。）
 	       if (!uploadDir.exists()) uploadDir.mkdirs();
 	       //新建一个文件
-	       File tempFile = new File("D:\\fileupload\\" + new Date().getTime() + ".xls"); 
+	       File tempFile = new File(filePath + new Date().getTime() + ".xls");
 	       //初始化输入流
 	       InputStream is = null;  
 	       try{

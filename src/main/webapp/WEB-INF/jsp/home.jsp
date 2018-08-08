@@ -36,10 +36,7 @@
         <div class="layui-inline">
             <input style="width:180px;" value="${Fdate}" autocomplete="off" placeholder="请选择日期" type="text" class="layui-input" name="Fdate" id="date1">
         </div>
-        单据头(序号):
-        <div class="layui-inline">
-            <input id="FBillHeadNo" value="${FBillHeadNo}" onkeyup="value=value.replace(/[^\d]/g,'')" type="text" name="FBillHeadNo" placeholder="请输入" autocomplete="off" class="layui-input">
-        </div>
+
         单据体(摘要)：
         <div class="layui-inline">
             <input  type="text" value="${FEXPLANATION}" name="FEXPLANATION" placeholder="请输入"  autocomplete="off" class="layui-input">
@@ -53,9 +50,13 @@
         </select>
 
     </fieldset>
-    <!-- 固定值输入部分 -->
+    <!-- 起始值输入部分 -->
     <fieldset>
         <legend>起始值</legend>
+        单据头(序号):
+        <div class="layui-inline">
+            <input id="FBillHeadNo" value="${FBillHeadNo}" onkeyup="value=value.replace(/[^\d]/g,'')" type="text" name="FBillHeadNo" placeholder="请输入" autocomplete="off" class="layui-input">
+        </div>
         单据头(凭证号):
         <div class="layui-inline">
             <input id="FVOUCHERGROUPNO" value="${FVOUCHERGROUPNO}" onkeyup="value=value.replace(/[^\d]/g,'')" type="text" autocomplete="off" name="FVOUCHERGROUPNO" placeholder="请输入起始值" class="layui-input"/>
