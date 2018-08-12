@@ -55,7 +55,7 @@
         <legend>起始值</legend>
         单据头(序号):
         <div class="layui-inline">
-            <input id="FBillHeadNo" value="${FBillHeadNo}" onkeyup="value=value.replace(/[^\d]/g,'')" type="text" name="FBillHeadNo" placeholder="请输入" autocomplete="off" class="layui-input">
+            <input id="FBillHeadNo" value="${FBillHeadNo}" onkeyup="value=value.replace(/[^\d]/g,'')" type="text" name="FBillHeadNo" placeholder="请输入起始值" autocomplete="off" class="layui-input">
         </div>
         单据头(凭证号):
         <div class="layui-inline">
