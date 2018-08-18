@@ -15,6 +15,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import cn.richinfo.excelformat.util.ArithUtil;
 import org.apache.log4j.Logger;
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFCellStyle;
@@ -190,20 +191,25 @@ public class ChangeExcelService {
                             }
                         } else if (c >= 2) {
                             double moneyNum = cell.getNumericCellValue();//单行合计数值
+                            //logger.info("原始值,行："+(r+1)+"列："+(c+1)+"值"+moneyNum);
+                            moneyNum = ArithUtil.round(moneyNum,2);//保留2位
+                            logger.info("保留两位后，行："+(r+1)+"列："+(c+1)+"值"+moneyNum);
                             if (c == 2) {//本行所有项目合计
                                 rowTatal = moneyNum;//单行合计
                             } else {//项目列
-                                sumCell += moneyNum;//求和
+                                sumCell = ArithUtil.add(sumCell,moneyNum);//求和
                                 //最后一列的时候
                                 double diffValue = 0;//差值
                                 if (c + 1 == totalCells) {
-                                    diffValue = rowTatal - sumCell;
+                                    diffValue = ArithUtil.sub(rowTatal,sumCell);
+                                    diffValue = ArithUtil.round(diffValue,2);
+                                    //logger.info("补差：sheet="+(s+1)+",row="+(r+1)+",cell="+(c+1)+",diffValue="+diffValue);
                                     if (diffValue != 0) {//差值不为0
                                         for (int k = totalCells - 1; k > 3; k--) {
                                             Cell cellObj = row.getCell(k);
                                             double oldValue = cellObj.getNumericCellValue();
-                                            if (oldValue > 0) {
-                                                double newValue = oldValue + diffValue;//将差值补到不为0的单元格中
+                                            if (oldValue > 0 || oldValue < 0) {
+                                                double newValue = ArithUtil.add(oldValue,diffValue);//将差值补到不为0的单元格中
                                                 cellObj.setCellValue(newValue);
                                                 logger.info("补差：sheet="+(s+1)+",row="+(r+1)+",cell="+(k+1)+",diffValue="+diffValue);
                                                 break;//中断循环
@@ -508,11 +514,11 @@ public class ChangeExcelService {
                 }
 
                 if ("FAMOUNTFOR".equals(row1Array[j])) {
-                    //cell.setCellStyle(cellStyle1);
+                    cell.setCellStyle(cellStyle1);
                     cell.setCellValue(Double.parseDouble(cellValue));
 
                 } else if ("FDEBIT".equals(row1Array[j])) {
-                    //cell.setCellStyle(cellStyle2);
+                    cell.setCellStyle(cellStyle1);
                     cell.setCellValue(Double.parseDouble(cellValue));
                 } else {
                     cell.setCellValue(cellValue);
